@@ -1,75 +1,31 @@
-# React + TypeScript + Vite
+# Домашняя аптечка онлайн (Fullstack проект)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Назначение приложения
+Приложение предназначено для ведения учёта домашних лекарств. Оно позволяет отслеживать сроки годности, количество и категории медикаментов, а также подбирать подходящие препараты по симптому. Дополнительно приложение помогает проверить комплектность экстренного набора и найти организации для передачи ненужных, но годных лекарств.
 
-Currently, two official plugins are available:
+## Основные пользовательские сценарии
+1. **Обзор:** Просмотр сводной статистики (сколько всего упаковок, что скоро истекает, что просрочено) и списка лекарств, требующих внимания.
+2. **Аптечка:** Просмотр полного списка лекарств в виде таблицы, поиск по названию/категории и фильтрация по статусу (истекающие/просроченные).
+3. **Подбор:** Выбор недуга (например, "Головная боль") для получения списка подходящих лекарств, имеющихся в аптечке.
+4. **Экстренный набор:** Проверка наличия обязательного минимума препаратов на случай ЧС, отслеживание прогресса комплектности.
+5. **Приюты:** Просмотр информации о благотворительных организациях и их реквизитов для передачи лекарств.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Экраны приложения (Скриншоты)
+Скриншоты всех экранов находятся в каталоге `docs/screenshots/`.
+- Обзор (dashboard.png)
+- Аптечка (cabinet.png)
+- Подбор (symptoms.png)
+- Экстренный набор (emergency.png)
+- Приюты (shelters.png)
 
-## React Compiler
+## Стек технологий
+- **Frontend:** React, TypeScript, Vite
+- **Стилизация:** Tailwind CSS
+- **Маршрутизация:** React Router v6
+- **Иконки:** FontAwesome (CDN)
+- **Структура:** Упрощенный Feature-Sliced Design (FSD-lite): `app`, `pages`, `shared`, `entities`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+## Запуск проекта
+1. Установите зависимости:
+   ```bash
+   npm install
