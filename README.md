@@ -19,13 +19,92 @@
 - Приюты (shelters.png)
 
 ## Стек технологий
-- **Frontend:** React, TypeScript, Vite
-- **Стилизация:** Tailwind CSS
-- **Маршрутизация:** React Router v6
-- **Иконки:** FontAwesome (CDN)
-- **Структура:** Упрощенный Feature-Sliced Design (FSD-lite): `app`, `pages`, `shared`, `entities`
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS, React Router v6
+- **Backend:** Python, FastAPI, SQLAlchemy, Pydantic
+- **База данных:** PostgreSQL
+- **Контроль версий:** Git
 
-## Запуск проекта
-1. Установите зависимости:
-   ```bash
-   npm install
+## Структура проекта
+```text
+med-tracker/
+├── backend/                # Серверная часть (FastAPI)
+│   ├── app/
+│   │   ├── __init__.py     # Пустой файл (пакет Python)
+│   │   ├── main.py         # Точка входа, роутинг API
+│   │   ├── database.py     # Подключение к PostgreSQL
+│   │   ├── models.py       # Модели SQLAlchemy (таблицы)
+│   │   ├── schemas.py      # Схемы Pydantic (валидация)
+│   │   └── crud.py         # Операции с данными (CRUD)
+│   ├── .env                # Переменные окружения (НЕ в Git)
+│   ├── requirements.txt    # Зависимости Python
+│   └── venv/               # Виртуальное окружение (НЕ в Git)
+├── public/                 # Статические файлы
+├── src/                    # Клиентская часть (React)
+│   ├── app/                # Настройка роутинга
+│   │   └── App.tsx
+│   ├── pages/              # Страницы приложения
+│   │   ├── DashboardPage.tsx
+│   │   ├── CabinetPage.tsx
+│   │   ├── SymptomsPage.tsx
+│   │   ├── EmergencyPage.tsx
+│   │   └── SheltersPage.tsx
+│   └── shared/             # Общие ресурсы
+│       ├── api/            # Работа с данными
+│       │   └── mockData.ts
+│       ├── ui/             # UI-компоненты
+│       │   └── Layout.tsx
+│       └── utils/          # Утилиты
+│           └── dateUtils.ts
+├── docs/                   # Документация
+│   └── screenshots/        # Скриншоты экранов
+├── .gitignore              # Исключения для Git
+├── package.json            # Зависимости Node.js
+├── tailwind.config.js      # Конфигурация Tailwind CSS
+├── tsconfig.json           # Конфигурация TypeScript
+└── README.md               # Этот файл
+```
+
+## Настройка и запуск Backend
+
+### 1. Требования
+- Установленный Python (3.9+)
+- Установленный PostgreSQL (порт 5433)
+- Созданная база данных `med_tracker`
+
+### 2. Установка зависимостей
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Для Windows
+pip install -r requirements.txt
+```
+
+### 3. Настройка окружения
+Создайте файл `.env` в папке `backend` и укажите свой пароль от PostgreSQL:
+```env
+DATABASE_URL=postgresql://postgres:ВАШ_ПАРОЛЬ@localhost:5433/med_tracker
+```
+
+### 4. Запуск сервера
+```bash
+uvicorn app.main:app --reload
+```
+API доступно по адресу: `http://localhost:8000`
+Документация Swagger UI: `http://localhost:8000/docs`
+
+## Настройка и запуск Frontend
+
+### 1. Установка зависимостей
+```bash
+npm install
+```
+
+### 2. Запуск
+```bash
+npm run dev
+```
+Приложение доступно по адресу: `http://localhost:5173`
+
+## История разработки
+- **Лабораторная №1:** Интерфейс приложения и каркас frontend (React + TS).
+- **Лабораторная №2:** Backend на FastAPI, подключение PostgreSQL, реализация CRUD API.
