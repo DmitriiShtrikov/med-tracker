@@ -1,9 +1,9 @@
 // src/pages/SymptomsPage.tsx
-import { useState } from 'react';
-import { mockMedicines } from '../shared/api/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '../shared/api/api';
+import type { Medicine } from '../shared/api/types';
 import { getDaysUntilExpiry } from '../shared/utils/dateUtils';
 
-// Карта соответствия недугов и категорий лекарств
 const ailmentMap: Record<string, { title: string; icon: string; categories: string[] }> = {
   'headache':    { title: 'Головная боль',         icon: 'fa-head-side-virus',     categories: ['Обезболивающее', 'Спазмолитик'] },
   'fever':       { title: 'Жар / Температура',     icon: 'fa-temperature-high',    categories: ['Жаропонижающее', 'Противовоспалительное'] },
@@ -22,16 +22,36 @@ const ailmentMap: Record<string, { title: string; icon: string; categories: stri
 
 const SymptomsPage = () => {
   const [selectedSymptom, setSelectedSymptom] = useState('');
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Поиск подходящих лекарств
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get<Medicine[]>('/medicines/');
+        setMedicines(response.data);
+      } catch (err) {
+        setError('Не удалось загрузить данные.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMedicines();
+  }, []);
+
   const matchingMedicines = selectedSymptom
-    ? mockMedicines.filter((med) => {
+    ? medicines.filter((med) => {
         const days = getDaysUntilExpiry(med.expiry);
         if (days < 0) return false; // Не показываем просроченные
         const ailment = ailmentMap[selectedSymptom];
         return ailment.categories.includes(med.category);
       }).sort((a, b) => getDaysUntilExpiry(a.expiry) - getDaysUntilExpiry(b.expiry))
     : [];
+
+  if (isLoading) return <div className="text-center py-10 text-gh-muted">Загрузка...</div>;
+  if (error) return <div className="text-center py-10 text-gh-red">{error}</div>;
 
   return (
     <div className="space-y-6">
@@ -42,7 +62,6 @@ const SymptomsPage = () => {
         <p className="text-gh-muted text-sm mt-2">Укажите ваш недуг — приложение подберёт подходящие лекарства из вашей аптечки.</p>
       </div>
 
-      {/* Форма выбора недуга */}
       <div className="bg-gh-surface rounded-md border border-gh-border p-6">
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-end">
           <div className="flex-grow">
@@ -61,7 +80,7 @@ const SymptomsPage = () => {
             </select>
           </div>
           <button
-            onClick={() => setSelectedSymptom(selectedSymptom)} // Кнопка нужна для UX, но фильтрация происходит автоматически при изменении select
+            onClick={() => setSelectedSymptom(selectedSymptom)}
             className="bg-gh-purple hover:opacity-90 text-white px-5 py-2 rounded-md text-sm font-medium transition-all border border-[rgba(240,246,252,0.1)] shadow-sm flex items-center justify-center gap-2 whitespace-nowrap"
           >
             <i className="fa-solid fa-magnifying-glass"></i> Подобрать
@@ -69,9 +88,8 @@ const SymptomsPage = () => {
         </div>
       </div>
 
-      {/* Результаты */}
       {selectedSymptom && (
-        <div className="space-y-4">
+        <div className="space-y-4 fade-in">
           <div className="bg-gh-surface rounded-md border border-gh-border p-5 flex items-center gap-4">
             <div className="bg-gh-purple/10 border border-gh-purple/20 text-gh-purple p-3 rounded-md text-2xl">
               <i className={`fa-solid ${ailmentMap[selectedSymptom].icon}`}></i>
@@ -86,25 +104,18 @@ const SymptomsPage = () => {
             <div className="bg-gh-surface rounded-md border border-gh-border p-8 text-center">
               <i className="fa-solid fa-circle-exclamation text-3xl text-gh-red mb-3"></i>
               <p className="text-white font-medium">К сожалению, в аптечке нет подходящих лекарств</p>
-              <p className="text-gh-muted text-sm mt-2 font-mono">Попробуйте добавить лекарство из категории: <span className="text-gh-blue">{ailmentMap[selectedSymptom].categories.join(', ')}</span></p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {matchingMedicines.map((med) => {
                 const days = getDaysUntilExpiry(med.expiry);
-                const totalPills = med.packs * med.blistersPerPack * med.pillsPerBlister;
+                const totalPills = med.packs * med.blisters_per_pack * med.pills_per_blister;
 
-                let statusColor, statusText;
-                if (days <= 30) {
-                  statusColor = 'text-gh-yellow bg-gh-yellow/10 border-gh-yellow/20';
-                  statusText = `⚠️ Истекает через ${days} дн.`;
-                } else {
-                  statusColor = 'text-gh-green bg-gh-green/10 border-gh-green/20';
-                  statusText = `✓ Годен (осталось ${days} дн.)`;
-                }
+                let statusColor = days <= 30 ? 'text-gh-yellow bg-gh-yellow/10 border-gh-yellow/20' : 'text-gh-green bg-gh-green/10 border-gh-green/20';
+                let statusText = days <= 30 ? `⚠️ Истекает через ${days} дн.` : `✓ Годен (осталось ${days} дн.)`;
 
                 return (
-                  <div key={med.id} className="bg-gh-surface rounded-md border border-gh-border p-5 hover:border-gh-purple transition-all cursor-pointer">
+                  <div key={med.id} className="bg-gh-surface rounded-md border border-gh-border p-5 hover:border-gh-purple transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h4 className="text-white font-semibold text-lg">{med.name}</h4>
@@ -113,36 +124,15 @@ const SymptomsPage = () => {
                       <span className={`text-xs font-mono px-2 py-1 rounded border ${statusColor} whitespace-nowrap`}>{statusText}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-center mt-4 pt-4 border-t border-gh-border">
-                      <div>
-                        <div className="text-[10px] text-gh-muted uppercase font-mono">Упаковок</div>
-                        <div className="text-white font-bold text-lg font-mono">{med.packs}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-gh-muted uppercase font-mono">Блистеров</div>
-                        <div className="text-white font-bold text-lg font-mono">{med.blistersPerPack}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-gh-muted uppercase font-mono">Таблеток</div>
-                        <div className="text-white font-bold text-lg font-mono">{totalPills}</div>
-                      </div>
+                      <div><div className="text-[10px] text-gh-muted uppercase font-mono">Упаковок</div><div className="text-white font-bold text-lg font-mono">{med.packs}</div></div>
+                      <div><div className="text-[10px] text-gh-muted uppercase font-mono">Блистеров</div><div className="text-white font-bold text-lg font-mono">{med.blisters_per_pack}</div></div>
+                      <div><div className="text-[10px] text-gh-muted uppercase font-mono">Таблеток</div><div className="text-white font-bold text-lg font-mono">{totalPills}</div></div>
                     </div>
-                    {med.note && (
-                      <div className="mt-3 pt-3 border-t border-gh-border text-xs text-gh-muted font-mono">
-                        <i className="fa-solid fa-note-sticky mr-1"></i>{med.note}
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {!selectedSymptom && (
-        <div className="bg-gh-surface rounded-md border border-gh-border p-12 text-center text-gh-muted">
-          <i className="fa-solid fa-hand-holding-medical text-4xl mb-3 opacity-50 text-gh-purple"></i>
-          <p className="font-mono text-sm">Выберите недуг и нажмите «Подобрать»</p>
         </div>
       )}
     </div>

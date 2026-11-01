@@ -1,27 +1,54 @@
 // src/pages/CabinetPage.tsx
-import { useState } from 'react';
-import { mockMedicines } from '../shared/api/mockData';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Добавили для перехода на страницу редактирования
+import { api } from '../shared/api/api';
+import type { Medicine } from '../shared/api/types';
+import { getDaysUntilExpiry, formatDate } from '../shared/utils/dateUtils';
 
 const CabinetPage = () => {
+  const navigate = useNavigate(); // Инициализируем navigate
+  
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'expiring' | 'expired'>('all');
 
-  // Функция для расчета дней до истечения срока годности
-  const getDaysUntilExpiry = (dateStr: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expiry = new Date(dateStr);
-    expiry.setHours(0, 0, 0, 0);
-    return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  // Загрузка данных с сервера
+  const fetchMedicines = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<Medicine[]>('/medicines/');
+      setMedicines(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Не удалось загрузить данные.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Форматирование даты
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('ru-RU');
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
+
+  // Функция удаления
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Вы уверены, что хотите удалить "${name}"?`)) {
+      return;
+    }
+    try {
+      await api.delete(`/medicines/${id}/`);
+      setMedicines((prev) => prev.filter((med) => med.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка при удалении лекарства');
+    }
   };
 
-  // Фильтрация и поиск
-  const filteredMedicines = mockMedicines
+  // Фильтрация
+  const filteredMedicines = medicines
     .filter((med) => {
       const matchesSearch =
         med.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -35,6 +62,9 @@ const CabinetPage = () => {
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => new Date(a.expiry).getTime() - new Date(b.expiry).getTime());
+
+  if (isLoading) return <div className="text-center py-10 text-gh-muted">Загрузка...</div>;
+  if (error) return <div className="text-center py-10 text-gh-red">{error}</div>;
 
   return (
     <div className="space-y-4">
@@ -90,16 +120,16 @@ const CabinetPage = () => {
                   let rowClass = 'hover:bg-gh-subtle cursor-pointer';
                   let dateClass = 'text-gh-green font-mono';
                   let dateText = formatDate(med.expiry);
-                  let expiryBadge = '';
+                  let expiryBadge = null;
 
                   if (days < 0) {
                     rowClass = 'bg-gh-red/5 hover:bg-gh-red/10 border-l-2 border-gh-red cursor-pointer';
                     dateClass = 'text-gh-red font-mono font-bold';
-                    expiryBadge = `<span class="ml-2 text-[10px] bg-gh-red/10 text-gh-red px-1.5 py-0.5 rounded border border-gh-red/20">Просрочено</span>`;
+                    expiryBadge = <span className="ml-2 text-[10px] bg-gh-red/10 text-gh-red px-1.5 py-0.5 rounded border border-gh-red/20">Просрочено</span>;
                   } else if (days <= 30) {
                     rowClass = 'bg-gh-yellow/10 hover:bg-gh-yellow/20 border-l-2 border-gh-yellow cursor-pointer';
                     dateClass = 'text-gh-yellow font-mono font-bold';
-                    expiryBadge = `<span class="ml-2 text-[10px] bg-gh-yellow/20 text-gh-yellow px-1.5 py-0.5 rounded border border-gh-yellow/40">Осталось ${days} дн.</span>`;
+                    expiryBadge = <span className="ml-2 text-[10px] bg-gh-yellow/20 text-gh-yellow px-1.5 py-0.5 rounded border border-gh-yellow/40">Осталось {days} дн.</span>;
                   }
 
                   return (
@@ -113,17 +143,28 @@ const CabinetPage = () => {
                       <td className="px-5 py-3 whitespace-nowrap text-gh-muted text-sm font-mono">{med.category}</td>
                       <td className="px-5 py-3 whitespace-nowrap text-gh-text text-sm font-mono">
                         <div className="text-white font-medium">{med.packs} уп.</div>
-                        <div className="text-xs text-gh-muted mt-0.5">{med.blistersPerPack} бл. × {med.pillsPerBlister} таб.</div>
+                        <div className="text-xs text-gh-muted mt-0.5">{med.blisters_per_pack} бл. × {med.pills_per_blister} таб.</div>
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap text-sm">
                         <span className={dateClass}>{dateText}</span>
-                        <span dangerouslySetInnerHTML={{ __html: expiryBadge }} />
+                        {expiryBadge}
                       </td>
                       <td className="px-5 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button className="text-gh-muted hover:text-gh-blue transition-colors p-1" title="Редактировать">
+                        {/* Кнопка редактирования: переход на /edit/:id */}
+                        <button 
+                          onClick={() => navigate(`/edit/${med.id}`)} 
+                          className="text-gh-muted hover:text-gh-blue transition-colors p-1" 
+                          title="Редактировать"
+                        >
                           <i className="fa-solid fa-pen-to-square"></i>
                         </button>
-                        <button className="text-gh-muted hover:text-gh-red transition-colors p-1" title="Удалить">
+                        
+                        {/* Кнопка удаления */}
+                        <button 
+                          onClick={() => handleDelete(med.id, med.name)} 
+                          className="text-gh-muted hover:text-gh-red transition-colors p-1" 
+                          title="Удалить"
+                        >
                           <i className="fa-solid fa-trash"></i>
                         </button>
                       </td>

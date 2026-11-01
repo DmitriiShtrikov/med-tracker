@@ -1,40 +1,75 @@
 // src/pages/DashboardPage.tsx
-import { mockMedicines } from '../shared/api/mockData';
+import { useState, useEffect } from 'react';
+import { api } from '../shared/api/api';
+import type { Medicine } from '../shared/api/types';
+import { getDaysUntilExpiry } from '../shared/utils/dateUtils';
 
 const DashboardPage = () => {
-  // Функция для расчета дней до истечения срока годности
-  const getDaysUntilExpiry = (dateStr: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expiry = new Date(dateStr);
-    expiry.setHours(0, 0, 0, 0);
-    return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  };
+  // Состояния (State)
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Подсчет статистики
+  // Загрузка данных при монтировании компонента
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        setIsLoading(true);
+        // Делаем GET-запрос к нашему API
+        const response = await api.get<Medicine[]>('/medicines/');
+        setMedicines(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Ошибка при загрузке:', err);
+        setError('Не удалось загрузить данные. Проверьте, запущен ли сервер (FastAPI).');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMedicines();
+  }, []); // Пустой массив означает, что запрос выполнится 1 раз при загрузке
+
+  // Если идет загрузка — показываем спиннер (анимация из Tailwind)
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gh-blue"></div>
+      </div>
+    );
+  }
+
+  // Если произошла ошибка — показываем сообщение
+  if (error) {
+    return (
+      <div className="bg-gh-red/10 border border-gh-red text-gh-red p-4 rounded-md">
+        <p className="font-semibold">Ошибка!</p>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  // Подсчет статистики (теперь на основе реальных данных из БД)
   let totalPacks = 0;
   let expiringCount = 0;
   let expiredCount = 0;
 
-  mockMedicines.forEach((med) => {
+  medicines.forEach((med) => {
     totalPacks += med.packs;
     const days = getDaysUntilExpiry(med.expiry);
     if (days < 0) expiredCount++;
     else if (days <= 30) expiringCount++;
   });
 
-  // Фильтрация лекарств, требующих внимания (истекают в ближайшие 30 дней)
-  const attentionMeds = mockMedicines.filter((med) => {
+  const attentionMeds = medicines.filter((med) => {
     const days = getDaysUntilExpiry(med.expiry);
     return days >= 0 && days <= 30;
   });
 
-  // Форматирование текущей даты
   const todayStr = new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="space-y-6">
-      {/* Заголовок */}
+    <div className="space-y-6 fade-in"> {/* Класс fade-in добавит анимацию появления */}
       <div className="flex justify-between items-center border-b border-gh-border pb-4">
         <h2 className="text-xl font-semibold text-white">Обзор аптечки</h2>
         <span className="text-sm font-mono text-gh-muted bg-gh-surface px-3 py-1 rounded-md border border-gh-border">
@@ -42,7 +77,6 @@ const DashboardPage = () => {
         </span>
       </div>
 
-      {/* Карточки статистики */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-gh-surface p-5 rounded-md border border-gh-border flex items-center justify-between hover:border-gh-muted transition-colors">
           <div>
@@ -75,7 +109,6 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Список требующих внимания */}
       <div className="bg-gh-surface rounded-md border border-gh-border overflow-hidden">
         <div className="bg-gh-subtle px-5 py-3 border-b border-gh-border flex justify-between items-center">
           <h3 className="text-sm font-semibold text-white">Требует внимания</h3>

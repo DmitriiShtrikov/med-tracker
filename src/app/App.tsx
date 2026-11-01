@@ -6,6 +6,8 @@ import CabinetPage from '../pages/CabinetPage';
 import SymptomsPage from '../pages/SymptomsPage';
 import EmergencyPage from '../pages/EmergencyPage';
 import SheltersPage from '../pages/SheltersPage';
+import AddMedicinePage from '../pages/AddMedicinePage';
+import EditMedicinePage from '../pages/EditMedicinePage';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="symptoms" element={<SymptomsPage />} />
           <Route path="emergency" element={<EmergencyPage />} />
           <Route path="shelters" element={<SheltersPage />} />
+          <Route path="add" element={<AddMedicinePage />} />
+          <Route path="edit/:id" element={<EditMedicinePage />} />
         </Route>
       </Routes>
     </BrowserRouter>
