@@ -1,22 +1,53 @@
 from pydantic import BaseModel, Field
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
+# --- Пользователи ---
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    class Config:
+        from_attributes = True
+
+# --- Категории ---
+class CategoryBase(BaseModel):
+    name: str
+class CategoryResponse(CategoryBase):
+    id: int
+    class Config:
+        from_attributes = True
+
+# --- Симптомы ---
+class SymptomBase(BaseModel):
+    name: str
+class SymptomResponse(SymptomBase):
+    id: int
+    class Config:
+        from_attributes = True
+
+# --- Лекарства ---
 class MedicineBase(BaseModel):
-    name: str = Field(..., min_length=1, description="Название лекарства")
-    category: str = Field(..., min_length=1, description="Категория")
-    packs: int = Field(1, ge=1, description="Количество упаковок")
-    blisters_per_pack: int = Field(1, ge=1, description="Блистеров в упаковке")
-    pills_per_blister: int = Field(1, ge=1, description="Таблеток в блистере")
-    expiry: date = Field(..., description="Срок годности")
-    note: Optional[str] = Field("", description="Заметка")
+    name: str
+    user_id: int
+    category_id: int
+    symptom_id: Optional[int] = None
+    packs: int = 1
+    blisters_per_pack: int = 1
+    pills_per_blister: int = 1
+    expiry: date
+    note: Optional[str] = ""
 
 class MedicineCreate(MedicineBase):
     pass
 
 class MedicineUpdate(BaseModel):
     name: Optional[str] = None
-    category: Optional[str] = None
+    category_id: Optional[int] = None
+    symptom_id: Optional[int] = None
     packs: Optional[int] = None
     blisters_per_pack: Optional[int] = None
     pills_per_blister: Optional[int] = None
@@ -25,6 +56,7 @@ class MedicineUpdate(BaseModel):
 
 class MedicineResponse(MedicineBase):
     id: int
-
+    category_rel: Optional[CategoryResponse] = None
+    symptom_rel: Optional[SymptomResponse] = None
     class Config:
         from_attributes = True

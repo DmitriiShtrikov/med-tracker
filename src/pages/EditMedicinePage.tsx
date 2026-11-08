@@ -2,32 +2,42 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../shared/api/api';
+import type { Category, Symptom } from '../shared/api/types';
+// ЧИСТЫЕ ИМПОРТЫ ИЗ ENTITIES
+import { CategorySelect } from '../entities/category';
+import { SymptomSelect } from '../entities/symptom';
 
 const EditMedicinePage = () => {
-  const { id } = useParams(); // Получаем ID из URL
+  const { id } = useParams();
   const navigate = useNavigate();
   
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [symptoms, setSymptoms] = useState<Symptom[]>([]);
   const [formData, setFormData] = useState({
-    name: '', category: '', packs: 1, blisters_per_pack: 1, pills_per_blister: 1, expiry: '', note: '',
+    name: '', category_id: '', symptom_id: '', packs: 1, blisters_per_pack: 1, pills_per_blister: 1, expiry: '', note: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Загружаем текущие данные лекарства
   useEffect(() => {
-    const fetchMedicine = async () => {
-      try {
-        const response = await api.get(`/medicines/${id}/`);
-        // Форматируем дату для input type="date" (отрезаем время)
-        const data = response.data;
-        setFormData({ ...data, expiry: data.expiry.split('T')[0] });
-      } catch (err) {
-        setError('Не удалось загрузить данные лекарства.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchMedicine();
+    // Загружаем лекарство и справочники
+    Promise.all([
+      api.get(`/medicines/${id}/`),
+      api.get('/categories/'),
+      api.get('/symptoms/')
+    ]).then(([medRes, catRes, symRes]) => {
+      const data = medRes.data;
+      setFormData({ 
+        ...data, 
+        category_id: data.category_id.toString(),
+        symptom_id: data.symptom_id ? data.symptom_id.toString() : '',
+        expiry: data.expiry.split('T')[0] 
+      });
+      setCategories(catRes.data);
+      setSymptoms(symRes.data);
+    }).catch(() => {
+      setError('Ошибка загрузки данных.');
+    }).finally(() => setIsLoading(false));
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -41,7 +51,11 @@ const EditMedicinePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.put(`/medicines/${id}/`, formData);
+      await api.put(`/medicines/${id}/`, {
+        ...formData,
+        category_id: Number(formData.category_id),
+        symptom_id: formData.symptom_id ? Number(formData.symptom_id) : null
+      });
       navigate('/cabinet'); 
     } catch (err) {
       setError('Ошибка при обновлении данных.');
@@ -64,21 +78,12 @@ const EditMedicinePage = () => {
 
         <div>
           <label className="block text-sm font-semibold text-gh-text mb-1">Категория *</label>
-          <select name="category" value={formData.category} onChange={handleChange} required className="w-full bg-gh-bg border border-gh-border rounded-md px-3 py-2 text-sm text-gh-text focus:border-gh-blue outline-none cursor-pointer">
-            <option value="">— Выберите категорию —</option>
-            <option value="Обезболивающее">Обезболивающее</option>
-            <option value="Жаропонижающее">Жаропонижающее</option>
-            <option value="Противовоспалительное">Противовоспалительное</option>
-            <option value="Антибиотик">Антибиотик</option>
-            <option value="Противовирусное">Противовирусное</option>
-            <option value="Антиаллергическое">Антиаллергическое</option>
-            <option value="Отхаркивающее">Отхаркивающее</option>
-            <option value="Спазмолитик">Спазмолитик</option>
-            <option value="Сорбенты">Сорбенты</option>
-            <option value="Антисептик">Антисептик</option>
-            <option value="Перевязочный материал">Перевязочный материал</option>
-            <option value="Витамины">Витамины</option>
-          </select>
+          <CategorySelect categories={categories} value={formData.category_id} onChange={handleChange} />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gh-text mb-1">Помогает от симптома</label>
+          <SymptomSelect symptoms={symptoms} value={formData.symptom_id} onChange={handleChange} />
         </div>
 
         <div className="grid grid-cols-3 gap-3 p-3 bg-gh-bg rounded-md border border-gh-border">
@@ -99,11 +104,10 @@ const EditMedicinePage = () => {
 
         <div className="flex justify-end gap-3 pt-4 border-t border-gh-border">
           <button type="button" onClick={() => navigate('/cabinet')} className="px-4 py-1.5 text-sm font-medium text-gh-text bg-gh-subtle hover:bg-[#30363d] border border-gh-border rounded-md transition-colors">Отмена</button>
-          <button type="submit" className="px-4 py-1.5 text-sm font-medium text-white bg-gh-blue hover:bg-blue-600 border border-[rgba(240,246,252,0.1)] rounded-md transition-colors shadow-sm">Сохранить изменения</button>
+          <button type="submit" className="px-4 py-1.5 text-sm font-medium text-white bg-gh-blue hover:bg-blue-600 border border-[rgba(240,246,252,0.1)] rounded-md transition-colors shadow-sm">Сохранить</button>
         </div>
       </form>
     </div>
   );
 };
-
 export default EditMedicinePage;
