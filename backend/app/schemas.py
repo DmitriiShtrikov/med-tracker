@@ -32,7 +32,6 @@ class SymptomResponse(SymptomBase):
 # --- Лекарства ---
 class MedicineBase(BaseModel):
     name: str
-    user_id: int
     category_id: int
     symptom_id: Optional[int] = None
     packs: int = 1
@@ -56,7 +55,17 @@ class MedicineUpdate(BaseModel):
 
 class MedicineResponse(MedicineBase):
     id: int
+    user_id: int
     category_rel: Optional[CategoryResponse] = None
     symptom_rel: Optional[SymptomResponse] = None
     class Config:
         from_attributes = True
+
+# --- Схемы для токенов ---
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+class TokenRefresh(BaseModel):
+    refresh_token: str

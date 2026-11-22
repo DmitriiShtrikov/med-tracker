@@ -1,5 +1,6 @@
 // src/shared/ui/Layout.tsx
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { UserProfile } from '../../entities/user';
 
 const Layout = () => {
   const location = useLocation();
@@ -44,6 +45,7 @@ const Layout = () => {
           <Link to="/add" className="bg-gh-green hover:bg-gh-green-hover text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-[rgba(240,246,252,0.1)] shadow-sm flex items-center gap-2">
             <i className="fa-solid fa-plus"></i> <span className="hidden sm:inline">Добавить</span>
           </Link>
+          <UserProfile />
         </div>
       </header>
 

@@ -37,9 +37,12 @@ const AddMedicinePage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    const isNumericField = name === 'packs' || name === 'blisters_per_pack' || name === 'pills_per_blister';
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'packs' || name === 'blisters_per_pack' || name === 'pills_per_blister' ? Number(value) : value,
+      // Если поле числовое и пользователь стер всё - оставляем пустую строку
+      [name]: isNumericField ? (value === '' ? '' : Number(value)) : value,
     }));
   };
 
@@ -47,17 +50,16 @@ const AddMedicinePage = () => {
     e.preventDefault();
     setError(null);
 
-    if (!formData.name || !formData.category_id || !formData.expiry) {
-      setError('Пожалуйста, заполните обязательные поля.');
+    if (!formData.name || !formData.category_id || !formData.expiry || formData.packs === '' as any) {
+      setError('Пожалуйста, заполните все обязательные поля.');
       return;
     }
-
+    
     try {
       setIsSubmitting(true);
       // Отправляем данные. user_id: 1 - временная заглушка до Лабы №4
       await api.post('/medicines/', {
         ...formData,
-        user_id: 1, 
         category_id: Number(formData.category_id),
         symptom_id: formData.symptom_id ? Number(formData.symptom_id) : null
       });

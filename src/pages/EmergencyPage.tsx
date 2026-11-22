@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../shared/api/api';
 import type { Medicine } from '../shared/api/types';
-import { emergencyKit } from '../shared/api/mockData';
+import { emergencyKit } from '../shared/config/constants';
 import { getDaysUntilExpiry } from '../shared/utils/dateUtils';
 
 const EmergencyPage = () => {
@@ -30,7 +30,7 @@ const EmergencyPage = () => {
 
       const nameMatch = m.name.toLowerCase().includes(itemName.split(' ')[0].toLowerCase()) || itemName.toLowerCase().includes(m.name.toLowerCase());
       
-      // ИСПРАВЛЕНО ТУТ: берем категорию из вложенного объекта
+      // берем категорию из вложенного объекта
       const categoryName = m.category_rel?.name.toLowerCase() || '';
       const categoryMatch = categoryName === itemCategory.toLowerCase() && ['антисептик', 'перевязочный материал', 'сорбенты', 'спазмолитик'].includes(itemCategory.toLowerCase());
 

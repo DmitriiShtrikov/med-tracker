@@ -1,16 +1,3 @@
-// src/shared/api/mockData.ts
-
-export interface Medicine {
-  id: number;
-  name: string;
-  category: string;
-  packs: number;
-  blistersPerPack: number;
-  pillsPerBlister: number;
-  expiry: string;
-  note: string;
-}
-
 export interface EmergencyItem {
   name: string;
   category: string;
@@ -23,22 +10,6 @@ export interface EmergencyGroup {
   icon: string;
   items: EmergencyItem[];
 }
-
-export const mockMedicines: Medicine[] = [
-  { id: 1, name: 'Парацетамол', category: 'Жаропонижающее', packs: 2, blistersPerPack: 2, pillsPerBlister: 10, expiry: '2026-12-01', note: 'Хранить в темном месте' },
-  { id: 2, name: 'Аспирин', category: 'Противовоспалительное', packs: 1, blistersPerPack: 1, pillsPerBlister: 20, expiry: '2026-08-01', note: 'Выбросить!' },
-  { id: 3, name: 'Ибупрофен', category: 'Обезболивающее', packs: 1, blistersPerPack: 2, pillsPerBlister: 10, expiry: '2026-10-05', note: 'Скоро закончится срок' },
-  { id: 4, name: 'Витамин C', category: 'Витамины', packs: 3, blistersPerPack: 1, pillsPerBlister: 30, expiry: '2027-05-20', note: '' },
-  { id: 5, name: 'Цитрамон', category: 'Обезболивающее', packs: 1, blistersPerPack: 1, pillsPerBlister: 10, expiry: '2026-09-25', note: 'Для головной боли' },
-  { id: 6, name: 'Супрастин', category: 'Антиаллергическое', packs: 1, blistersPerPack: 2, pillsPerBlister: 10, expiry: '2027-03-15', note: 'От аллергии' },
-  { id: 7, name: 'Но-шпа', category: 'Спазмолитик', packs: 2, blistersPerPack: 1, pillsPerBlister: 20, expiry: '2027-01-10', note: 'От спазмов в животе' },
-  { id: 8, name: 'Активированный уголь', category: 'Сорбенты', packs: 5, blistersPerPack: 1, pillsPerBlister: 10, expiry: '2026-11-20', note: 'При отравлении' },
-  { id: 9, name: 'Амброксол', category: 'Отхаркивающее', packs: 1, blistersPerPack: 2, pillsPerBlister: 10, expiry: '2026-10-15', note: 'От кашля' },
-  { id: 10, name: 'Амоксициллин', category: 'Антибиотик', packs: 1, blistersPerPack: 2, pillsPerBlister: 10, expiry: '2027-02-28', note: 'Только по назначению врача!' },
-  { id: 11, name: 'Арбидол', category: 'Противовирусное', packs: 2, blistersPerPack: 1, pillsPerBlister: 10, expiry: '2027-04-10', note: '' },
-  { id: 12, name: 'Лоратадин', category: 'Антиаллергическое', packs: 1, blistersPerPack: 1, pillsPerBlister: 10, expiry: '2026-09-18', note: 'Скоро истекает' }
-];
-
 export const emergencyKit: EmergencyGroup[] = [
     {
         group: 'Обезболивающие и жаропонижающие',

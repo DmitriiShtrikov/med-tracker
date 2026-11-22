@@ -42,14 +42,28 @@ const EditMedicinePage = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    const isNumericField = name === 'packs' || name === 'blisters_per_pack' || name === 'pills_per_blister';
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'packs' || name === 'blisters_per_pack' || name === 'pills_per_blister' ? Number(value) : value,
+      // Если поле числовое и пользователь стер всё - оставляем пустую строку
+      [name]: isNumericField ? (value === '' ? '' : Number(value)) : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    // Добавляем проверку, чтобы нельзя было сохранить пустые числа
+    if (!formData.name || !formData.category_id || !formData.expiry || 
+        formData.packs === '' as any || 
+        formData.blisters_per_pack === '' as any || 
+        formData.pills_per_blister === '' as any) {
+      setError('Пожалуйста, заполните все обязательные поля.');
+      return;
+    }
+
     try {
       await api.put(`/medicines/${id}/`, {
         ...formData,
@@ -61,7 +75,7 @@ const EditMedicinePage = () => {
       setError('Ошибка при обновлении данных.');
     }
   };
-
+  
   if (isLoading) return <div className="text-center py-10 text-gh-muted">Загрузка...</div>;
 
   return (
